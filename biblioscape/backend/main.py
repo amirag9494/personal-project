@@ -5,7 +5,6 @@ from typing import List, Optional
 
 app = FastAPI(title="Biblioscape API", version="1.0.0")
 
-# تنظیمات CORS برای ارتباط راحت فرانت‌اند با بک‌اند
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# مدل داده‌ای کتاب با Pydantic
 class Book(BaseModel):
     id: Optional[int] = None
     title: str
@@ -22,7 +20,6 @@ class Book(BaseModel):
     genre: str
     notes: Optional[str] = ""
 
-# پایگاه داده موقت در حافظه
 fake_db_books = [
     {"id": 1, "title": "1984", "author": "George Orwell", "genre": "Dystopian", "notes": "A masterpiece on totalitarianism."},
     {"id": 2, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "genre": "Classic", "notes": "The American dream illusion."}
@@ -38,10 +35,9 @@ def get_books():
 
 @app.post("/books", response_model=Book)
 def add_book(book: Book):
-    # این تیکه عوض شد تا باگ ID تکراری برطرف بشه
     new_id = max((b["id"] for b in fake_db_books), default=0) + 1
     book.id = new_id
-    fake_db_books.append(book.model_dump()) # استفاده از روش استاندارد Pydantic V2
+    fake_db_books.append(book.model_dump()) 
     return book
 
 @app.delete("/books/{book_id}")
