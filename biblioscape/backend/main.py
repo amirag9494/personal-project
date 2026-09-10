@@ -38,7 +38,8 @@ def get_books():
 
 @app.post("/books", response_model=Book)
 def add_book(book: Book):
-    new_id = len(fake_db_books) + 1
+    # این تیکه عوض شد تا باگ ID تکراری برطرف بشه
+    new_id = max((b["id"] for b in fake_db_books), default=0) + 1
     book.id = new_id
     fake_db_books.append(book.model_dump()) # استفاده از روش استاندارد Pydantic V2
     return book
