@@ -1,6 +1,5 @@
 const API_URL = "http://127.0.0.1:8000";
 
-// دریافت و نمایش کتاب‌ها از API
 async function fetchBooks() {
     try {
         const response = await fetch(`${API_URL}/books`);
@@ -11,7 +10,6 @@ async function fetchBooks() {
     }
 }
 
-// رندر کردن لیست کتاب‌ها در صفحه
 function renderBooks(books) {
     const container = document.getElementById("books-container");
     container.innerHTML = "";
@@ -34,7 +32,6 @@ function renderBooks(books) {
     });
 }
 
-// ثبت کتاب جدید از طریق متد POST در API
 document.getElementById("book-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -63,7 +60,6 @@ document.getElementById("book-form").addEventListener("submit", async (e) => {
     }
 });
 
-// حذف کتاب از طریق متد DELETE در API
 async function deleteBook(id) {
     try {
         const response = await fetch(`${API_URL}/books/${id}`, {
@@ -78,5 +74,4 @@ async function deleteBook(id) {
     }
 }
 
-// اجرای اولیه هنگام لود صفحه
 fetchBooks();
