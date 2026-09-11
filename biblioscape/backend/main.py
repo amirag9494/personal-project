@@ -4,11 +4,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import Column, Integer, String, Text
 from pydantic import BaseModel
 from typing import List, Optional
+from fastapi import HTTPException
 
-# ۱. ایمپورت تنظیمات پایگاه داده
 from database import engine, SessionLocal, Base
 
-# ۲. تعریف مدل دیتابیس (جدول books)
 class BookModel(Base):
     __tablename__ = "books"
 
@@ -18,12 +17,10 @@ class BookModel(Base):
     genre = Column(String, index=True)
     notes = Column(Text, nullable=True)
 
-# ۳. ساخت جدول در دیتابیس
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Biblioscape API", version="2.0.0")
 
-# تنظیمات CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,7 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# مدل‌های Pydantic برای اعتبارسنجی داده‌ها
+
 class BookCreate(BaseModel):
     title: str
     author: str
@@ -45,7 +42,6 @@ class BookResponse(BookCreate):
     class Config:
         from_attributes = True
 
-# وابستگی (Dependency) برای مدیریت Session دیتابیس
 def get_db():
     db = SessionLocal()
     try:
@@ -57,7 +53,6 @@ def get_db():
 def read_root():
     return {"message": "Welcome to Biblioscape API with SQLite! 📚"}
 
-# دریافت لیست کتاب‌ها همراه با قابلیت فیلتر بر اساس ژانر و نویسنده (Query Parameters)
 @app.get("/books", response_model=List[BookResponse])
 def get_books(
     genre: Optional[str] = None, 
@@ -88,12 +83,36 @@ def add_book(book: BookCreate, db: Session = Depends(get_db)):
     db.refresh(db_book)
     return db_book
 
-@app.delete("/books/{book_id}")
-def delete_book(book_id: int, db: Session = Depends(get_db)):
-    db_book = db.query(BookModel).filter(BookModel.id == book_id).first()
-    if not db_book:
+@app.put("/books/{book_id}")
+def update_book(book_id: int, updated_book: BookCreate, db: Session = Depends(get_db)):
+    book = db.query(BookModel).filter(BookModel.id == book_id).first()
+    if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     
-    db.delete(db_book)
+    book.title = updated_book.title
+    book.author = updated_book.author
+    book.genre = updated_book.genre
+    book.notes = updated_book.notes
+    
     db.commit()
-    return {"message": f"Book with id {book_id} deleted successfully."}
+    db.refresh(book)
+    return book
+
+@app.get("/books/stats")
+def get_book_stats(db: Session = Depends(get_db)):
+    total_books = db.query(BookModel).count()
+    
+    books = db.query(BookModel).all()
+    
+    genres_count = {}
+    for book in books:
+        genre = book.genre
+        if genre in genres_count:
+            genres_count[genre] += 1
+        else:
+            genres_count[genre] = 1
+            
+    return {
+        "total_books": total_books,
+        "genres_breakdown": genres_count
+    }
