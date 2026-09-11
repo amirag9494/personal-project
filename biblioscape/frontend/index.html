@@ -3,37 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblioscape | Midnight Reading Room</title>
+    <title>Biblioscape - Book Manager</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Biblioscape</h1>
-            <p>Your Personal Digital Bookshelf & Lo-Fi Study Room</p>
-        </header>
+    <div class="main-container">
+        <div class="left-column">
+            <h1>📚 Biblioscape</h1>
+            
+            <div class="card search-section">
+                <h3>Search Books</h3>
+                <input type="text" id="genre-input" placeholder="Search by genre...">
+                <input type="text" id="author-input" placeholder="Search by author...">
+                <button id="search-btn">Search / Filter</button>
+            </div>
 
-        <main class="dashboard">
-            <section class="card">
-                <h2>📚 My Bookshelf</h2>
+            <div class="card form-section">
+                <h2>Add New Book</h2>
                 <form id="book-form">
                     <input type="text" id="title" placeholder="Book Title" required>
                     <input type="text" id="author" placeholder="Author" required>
                     <input type="text" id="genre" placeholder="Genre" required>
-                    <textarea id="notes" placeholder="Short Notes / Quotes"></textarea>
-                    <button type="submit">Add to Bookshelf</button>
+                    <textarea id="notes" placeholder="Notes (optional)"></textarea>
+                    <button type="submit">Add Book</button>
                 </form>
-                <div id="books-container" class="books-list">
-                </div>
-            </section>
+            </div>
+        </div>
 
-            <section class="card">
-                <h2>🎧 Lo-Fi Atmosphere</h2>
-                <div class="spotify-player-container" style="margin-top: 1rem;">
-                    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/4RMz5ZxvcNcf5YQvv27KXJ?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <div class="right-column">
+            <div class="card stats-section">
+                <h3>📊 Library Stats</h3>
+                <p>Total Books: <span id="total-books">0</span></p>
+                <div id="genres-breakdown">
                 </div>
-            </section>
-        </main>
+            </div>
+
+            <div class="card music-section">
+                <div class="spotify-player-container" style="margin-top: 0;">
+                    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/4RMz5ZxvcNcf5YQvv27KXJ?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+            </div>
+
+            <div class="card books-section">
+                <h2>Book List</h2>
+                <ul id="book-list">
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>
