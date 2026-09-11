@@ -1,41 +1,99 @@
 const API_URL = "http://127.0.0.1:8000";
 
+let editingBookId = null;
+
 async function fetchBooks() {
+    const genreValue = document.getElementById("genre-input").value.trim();
+    const authorValue = document.getElementById("author-input").value.trim();
+
+    let url = `${API_URL}/books?`;
+    const params = [];
+
+    if (genreValue) {
+        params.push(`genre=${encodeURIComponent(genreValue)}`);
+    }
+    if (authorValue) {
+        params.push(`author=${encodeURIComponent(authorValue)}`);
+    }
+
+    if (params.length > 0) {
+        url += params.join("&");
+    } else {
+        url = `${API_URL}/books`;
+    }
+
     try {
-        const response = await fetch(`${API_URL}/books`);
+        const response = await fetch(url);
         const books = await response.json();
-        renderBooks(books);
+        displayBooks(books);
     } catch (error) {
-        console.error("Error fetching books (Make sure FastAPI is running):", error);
+        console.error("Error fetching books:", error);
     }
 }
 
-function renderBooks(books) {
-    const container = document.getElementById("books-container");
-    container.innerHTML = "";
+function displayBooks(books) {
+    const bookList = document.getElementById("book-list");
+    bookList.innerHTML = "";
 
     if (books.length === 0) {
-        container.innerHTML = "<p>Your bookshelf is empty.</p>";
+        bookList.innerHTML = "<li>No books found.</li>";
         return;
     }
 
     books.forEach(book => {
-        const bookEl = document.createElement("div");
-        bookEl.classList.add("book-item");
-        bookEl.innerHTML = `
-            <h3>${book.title} <span style="font-size: 0.8rem; color: #a8a095;">(${book.genre})</span></h3>
-            <p>Author: ${book.author}</p>
-            ${book.notes ? `<p style="margin-top: 5px; font-style: italic;">"${book.notes}"</p>` : ""}
-            <button onclick="deleteBook(${book.id})" style="margin-top: 8px; background: #a83232; color: #fff; padding: 2px 6px; font-size: 0.75rem; border:none; border-radius:3px; cursor:pointer;">Delete</button>
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <strong>${book.title}</strong> by ${book.author} 
+            <em>(${book.genre})</em>
+            <p>${book.notes || ""}</p>
+            <div style="margin-top: 8px; display: flex; gap: 8px;">
+                <button class="edit-btn" style="background-color: #457b9d; color: white;">Edit</button>
+                <button class="delete-btn" style="background-color: #e63946; color: white;">Delete</button>
+            </div>
         `;
-        container.appendChild(bookEl);
+
+        li.querySelector(".edit-btn").addEventListener("click", () => {
+            document.getElementById("title").value = book.title;
+            document.getElementById("author").value = book.author;
+            document.getElementById("genre").value = book.genre;
+            document.getElementById("notes").value = book.notes || "";
+            
+            editingBookId = book.id;
+            document.querySelector("#book-form button[type='submit']").textContent = "Update Book";
+        });
+
+        li.querySelector(".delete-btn").addEventListener("click", () => {
+            deleteBook(book.id);
+        });
+
+        bookList.appendChild(li);
     });
+}
+
+async function fetchStats() {
+    try {
+        const response = await fetch(`${API_URL}/books/stats`);
+        const stats = await response.json();
+
+        document.getElementById("total-books").textContent = stats.total_books;
+
+        const genresContainer = document.getElementById("genres-breakdown");
+        genresContainer.innerHTML = "";
+
+        for (const [genre, count] of Object.entries(stats.genres_breakdown)) {
+            const p = document.createElement("p");
+            p.textContent = `${genre}: ${count}`;
+            genresContainer.appendChild(p);
+        }
+    } catch (error) {
+        console.error("Error fetching stats:", error);
+    }
 }
 
 document.getElementById("book-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const newBook = {
+    const bookData = {
         title: document.getElementById("title").value,
         author: document.getElementById("author").value,
         genre: document.getElementById("genre").value,
@@ -43,20 +101,30 @@ document.getElementById("book-form").addEventListener("submit", async (e) => {
     };
 
     try {
-        const response = await fetch(`${API_URL}/books`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(newBook)
-        });
+        let response;
+        if (editingBookId !== null) {
+            response = await fetch(`${API_URL}/books/${editingBookId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bookData)
+            });
+            editingBookId = null;
+            document.querySelector("#book-form button[type='submit']").textContent = "Add Book";
+        } else {
+            response = await fetch(`${API_URL}/books`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bookData)
+            });
+        }
 
         if (response.ok) {
             document.getElementById("book-form").reset();
-            fetchBooks();
+            fetchBooks(); 
+            fetchStats(); 
         }
     } catch (error) {
-        console.error("Error adding book:", error);
+        console.error("Error saving book:", error);
     }
 });
 
@@ -67,11 +135,15 @@ async function deleteBook(id) {
         });
 
         if (response.ok) {
-            fetchBooks();
+            fetchBooks(); 
+            fetchStats(); 
         }
     } catch (error) {
         console.error("Error deleting book:", error);
     }
 }
 
+document.getElementById("search-btn").addEventListener("click", fetchBooks);
+
 fetchBooks();
+fetchStats();
