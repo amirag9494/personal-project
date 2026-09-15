@@ -2,6 +2,47 @@ const API_URL = "http://127.0.0.1:8000";
 
 let editingBookId = null;
 
+const switcherButton = document.getElementById("theme-switcher-button");
+const dropdown = document.getElementById("theme-dropdown");
+const statusEl = document.getElementById("status");
+const themeItems = document.querySelectorAll("[role='menuitem']");
+
+const themes = [
+  { name: "dark", message: "Switched to Dark theme!" },
+  { name: "light", message: "Switched to Light theme!" }
+];
+
+switcherButton.addEventListener("click", () => {
+  const isHidden = dropdown.hasAttribute("hidden");
+  if (isHidden) {
+    dropdown.removeAttribute("hidden");
+    switcherButton.setAttribute("aria-expanded", "true");
+  } else {
+    dropdown.setAttribute("hidden", "");
+    switcherButton.setAttribute("aria-expanded", "false");
+  }
+});
+
+themeItems.forEach(item => {
+  item.addEventListener("click", () => {
+    const themeName = item.textContent.toLowerCase();
+    
+    themes.forEach(t => {
+      document.body.classList.remove(`theme-${t.name}`);
+    });
+
+    document.body.classList.add(`theme-${themeName}`);
+
+    const selectedTheme = themes.find(t => t.name === themeName);
+    if (selectedTheme) {
+      statusEl.textContent = selectedTheme.message;
+    }
+
+    dropdown.setAttribute("hidden", "");
+    switcherButton.setAttribute("aria-expanded", "false");
+  });
+});
+
 async function fetchBooks() {
     const genreValue = document.getElementById("genre-input").value.trim();
     const authorValue = document.getElementById("author-input").value.trim();
@@ -47,8 +88,8 @@ function displayBooks(books) {
             <em>(${book.genre})</em>
             <p>${book.notes || ""}</p>
             <div style="margin-top: 8px; display: flex; gap: 8px;">
-                <button class="edit-btn" style="background-color: #457b9d; color: white;">Edit</button>
-                <button class="delete-btn" style="background-color: #e63946; color: white;">Delete</button>
+                <button class="edit-btn" style="background-color: #457b9d; color: white; width: auto; padding: 6px 12px; margin-bottom: 0;">Edit</button>
+                <button class="delete-btn" style="background-color: #e63946; color: white; width: auto; padding: 6px 12px; margin-bottom: 0;">Delete</button>
             </div>
         `;
 
